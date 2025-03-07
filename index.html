@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+	<meta name="generator" content="Hugo 0.91.2" />
+
+  <title>
+      
+      Owen Lacey
+      
+  </title>
+
+</head>
+
+
+  <body>
+
+    
+
+	
+<div class="h-feed">
+
+	
+	
+	  <div class="h-entry">
+		
+			<h1><a href="https://blog.owenlacey.dev/2025/02/24/animated-images-on-my-website.html">I over-engineered my website&#39;s personalisation</a></h1>
+		
+
+		<a href="https://blog.owenlacey.dev/2025/02/24/animated-images-on-my-website.html" class="u-url"><time class="dt-published" datetime="2025-02-26 13:58:36 &#43;0000">Feb 26, 2025</time></a>
+
+		<div class="e-content">
+			 <h1 id="introduction">Introduction</h1>
+<p>A recent milestone for me is finally putting together <a href="https://owenlacey.dev">my personal website</a>. Though I&rsquo;m not expecting this website to be much more than a pointer to where else you might find me, I wanted it to show my personality and to give some examples of things I find inspiring.</p>
+<p>I hope you&rsquo;ve checked out the website by now (in which case, thanks for coming back). You&rsquo;ll have noticed the floating icons distracting you from from the content I&rsquo;ve put on the site. I don&rsquo;t care, they&rsquo;re far cooler than anything I would have to say. These, if you didn&rsquo;t know, are called <em>penrose triangles</em>:</p>
+<!-- raw HTML omitted -->
+<p>These triangles are impossible in euclidean geometry, and are the sort of optical illusions that might remind you of the artist Escher&rsquo;s work. For me, they are the simplest way to make your head spin using just a pen &amp; paper; if you&rsquo;ve spotted me doodling in meetings (me? never!), I&rsquo;m probably drawing some of these - I think they&rsquo;re brilliant.</p>
+<h1 id="how-i-did-this">How I did this</h1>
+<p>Enough nerding out. After all, the point of this post is to go through how I added them to my site. More specifically, how I made them do that stuff with pure CSS. Here&rsquo;s a quick overview of my approach:</p>
+<ol>
+<li>I made the triangles myself on procreate. I enjoy messing around on the family iPad, and figured it might come in handy having these assets in future.</li>
+<li>My website is a tiny React app, I&rsquo;ve not had an excuse to try out vite for building npm applications before, so thought this was as good a chance as any.</li>
+<li>I used SASS for styling, which compiles into CSS, so that I can utilise various <a href="https://sass-lang.com/documentation/at-rules/">At-Rules</a> to make this CSS-only.</li>
+<li>Penrose triangles aren&rsquo;t the only thing I find cool, so I wanted the app to iterate through all the floating icons that might be bundled in my app and randomly decide on an amount of them to use. This way, I might have time to create some  Möbius strips, Rubiks cubes, Poké Balls, whatever.</li>
+</ol>
+<p>I wanted the icons to idly float around the background of my website in random directions. At the same time, I didn&rsquo;t want my website to be full of loads of hacky javascript code, so I thought it would be fun to try and do this in <em>pure CSS</em>. Without the benefit of hindsight I decided to name these icons <code>Floater</code>s; something I now regret. Regardless, it reminds me of one of my favourite quotes:</p>
+<blockquote>
+<p><em>There are only two hard things in Computer Science: cache invalidation and naming things - Phil Karlton</em></p>
+</blockquote>
+<p>With my consultancy hat on, here was my acceptance criteria:</p>
+<ol>
+<li>Icons are randomly positioned on the page.</li>
+<li>Icons float around in random directions.</li>
+<li>Icons have a random degree of rotation.</li>
+</ol>
+<p>First, I wanted to prove the concept. I needed to prove that I could apply custom behaviour to each icon without writing massive amounts of duplicated CSS. I know that I have tabs on the <code>index</code> (a unique identifier) when iterating through the <code>Floater</code>s, but how do I pass that through to the styles? I&rsquo;m not much of a front-end developer, but I like using the <a href="https://css-tricks.com/bem-101/">BEM methodology </a> for styles so that my DOM looks like the below:</p>
+<!-- raw HTML omitted -->
+<p>Now that each <code>Floater</code> has its own unique class name, I can style them differently. I can also use <code>@for</code> so that I don&rsquo;t have to duplicate the styles for each one:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scss" data-lang="scss"><span style="color:#a6e22e">.floater</span> {
+  $n<span style="color:#f92672">:</span> <span style="color:#ae81ff">5</span>;
+  <span style="color:#66d9ef">@for</span> $i <span style="color:#f92672">from</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">through</span> $n {
+    <span style="color:#66d9ef">&amp;</span><span style="color:#f92672">--</span><span style="color:#e6db74">#{</span>$i<span style="color:#e6db74">}</span> {
+      <span style="color:#a6e22e">height</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">60</span><span style="color:#66d9ef">px</span> <span style="color:#f92672">+</span> $i <span style="color:#f92672">*</span> <span style="color:#ae81ff">20</span><span style="color:#66d9ef">px</span>;
+    }
+  }
+}
+</code></pre></div><p>This means that each consecutive <code>Floater</code> gets bigger by <code>20px</code> , like so:</p>
+<!-- raw HTML omitted -->
+<p>Now we know we can style them differently, that means each <code>Floater</code> can have its own <em>animation</em>. Let&rsquo;s start small; it simply moving up and down:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scss" data-lang="scss">  $n<span style="color:#f92672">:</span> <span style="color:#ae81ff">9</span>;
+  <span style="color:#66d9ef">@for</span> $i <span style="color:#f92672">from</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">through</span> $n {
+    <span style="color:#66d9ef">@keyframes</span> <span style="color:#f92672">floater</span><span style="color:#e6db74">#{</span>$i<span style="color:#e6db74">}</span> {
+      <span style="color:#f92672">0</span><span style="color:#960050;background-color:#1e0010">%</span> {
+        <span style="color:#a6e22e">transform</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">translateY</span>(<span style="color:#ae81ff">0</span>);
+      }
+      <span style="color:#f92672">50</span><span style="color:#960050;background-color:#1e0010">%</span> {
+        <span style="color:#a6e22e">transform</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">translateY</span>(<span style="color:#ae81ff">10</span> <span style="color:#f92672">*</span> ($i<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>) <span style="color:#f92672">+</span> px);
+      }
+      <span style="color:#f92672">100</span><span style="color:#960050;background-color:#1e0010">%</span> {
+        <span style="color:#a6e22e">transform</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">translateY</span>(<span style="color:#ae81ff">0</span>);
+      }
+    }
+    <span style="color:#66d9ef">&amp;</span><span style="color:#f92672">--</span><span style="color:#e6db74">#{</span>$i<span style="color:#e6db74">}</span> {
+      <span style="color:#a6e22e">animation</span><span style="color:#f92672">:</span> floater<span style="color:#e6db74">#{</span>$i<span style="color:#e6db74">}</span> <span style="color:#ae81ff">1</span><span style="color:#66d9ef">s</span> ease alternate infinite;
+    }
+  }
+</code></pre></div><p>This means that each consecutive <code>Floater</code> moves down 10 more pixels:</p>
+<p><img src="https://blog.owenlacey.dev/uploads/2025/chrome-f5iy1k4igh.gif" alt="bouncing triangles"></p>
+<p>This was the final thing I needed to do to prove the concept. Now to actually make it look good&hellip;</p>
+<h2 id="random-positioning">Random positioning</h2>
+<p>I decided to use <a href="https://sass-lang.com/documentation/at-rules/mixin/">mixins</a> to keep the styles within the class declaration nice and succinct. Here&rsquo;s a <code>mixin</code> for random positioning:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scss" data-lang="scss"><span style="color:#66d9ef">@mixin</span><span style="color:#a6e22e"> random-position</span> {
+  <span style="color:#a6e22e">position</span><span style="color:#f92672">:</span> absolute;
+  <span style="color:#a6e22e">left</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">random</span>(<span style="color:#ae81ff">100</span>) <span style="color:#f92672">+</span> vw;
+  <span style="color:#a6e22e">top</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">random</span>(<span style="color:#ae81ff">100</span>) <span style="color:#f92672">+</span> vh;
+}
+
+<span style="color:#a6e22e">.floater</span> {
+
+
+  $n<span style="color:#f92672">:</span> <span style="color:#ae81ff">200</span>;
+  <span style="color:#66d9ef">@for</span> $i <span style="color:#f92672">from</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">through</span> $n {
+
+    <span style="color:#66d9ef">&amp;</span><span style="color:#f92672">--</span><span style="color:#e6db74">#{</span>$i<span style="color:#e6db74">}</span> {
+      <span style="color:#66d9ef">@include</span><span style="color:#a6e22e"> random-position</span>;
+
+    }
+  }
+}
+</code></pre></div><p>This uses <a href="https://sass-lang.com/documentation/modules/math/#random">random</a> to give each <code>Floater</code> a random <code>left</code> and <code>top</code>. This dotted the <code>Floater</code>s around nicely like so:</p>
+<!-- raw HTML omitted -->
+<blockquote>
+<p><em>Note: since the CSS is generated at build time, you&rsquo;ll notice the positioning (and all other random styling) is preserved on page refresh.</em></p>
+</blockquote>
+<h2 id="random-spin">Random spin</h2>
+<p>Here&rsquo;s the code to make the <code>Floater</code>s spin:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scss" data-lang="scss"><span style="color:#66d9ef">@mixin</span><span style="color:#a6e22e"> spin-animation</span>($i<span style="color:#f92672">,</span> $initialRotate) {
+  <span style="color:#66d9ef">@keyframes</span> <span style="color:#f92672">spin</span><span style="color:#e6db74">#{</span>$i<span style="color:#e6db74">}</span> {
+    <span style="color:#f92672">0</span><span style="color:#960050;background-color:#1e0010">%</span> {
+      <span style="color:#a6e22e">transform</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">rotate</span>($initialRotate <span style="color:#f92672">+</span> deg);
+    }
+    <span style="color:#f92672">100</span><span style="color:#960050;background-color:#1e0010">%</span> {
+      <span style="color:#a6e22e">transform</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">rotate</span>($initialRotate <span style="color:#f92672">+</span> <span style="color:#ae81ff">360</span><span style="color:#66d9ef">deg</span>);
+    }
+  }
+}
+
+<span style="color:#a6e22e">.floater</span> {
+
+  $n<span style="color:#f92672">:</span> <span style="color:#ae81ff">200</span>;
+  <span style="color:#66d9ef">@for</span> $i <span style="color:#f92672">from</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">through</span> $n {
+    <span style="color:#66d9ef">@include</span><span style="color:#a6e22e"> spin-animation</span>($i<span style="color:#f92672">,</span> $initialRotate);
+    <span style="color:#66d9ef">&amp;</span><span style="color:#f92672">--</span><span style="color:#e6db74">#{</span>$i<span style="color:#e6db74">}</span> {
+      <span style="color:#66d9ef">@include</span><span style="color:#a6e22e"> random-position</span>; <span style="color:#75715e">// as before
+</span><span style="color:#75715e"></span>
+
+      <span style="color:#f92672">&gt;</span> <span style="color:#f92672">img</span> {
+        <span style="color:#a6e22e">transform-origin</span><span style="color:#f92672">:</span> top left;
+        <span style="color:#a6e22e">animation</span><span style="color:#f92672">:</span> spin<span style="color:#e6db74">#{</span>$i<span style="color:#e6db74">}</span> <span style="color:#ae81ff">30</span><span style="color:#66d9ef">s</span> linear infinite;
+      }
+    }
+  }
+}
+</code></pre></div><p>I went with this because:</p>
+<ol>
+<li>Each <code>Floater</code> has its own starting degree of rotation, so they weren&rsquo;t all rotating uniformly.</li>
+<li>Having the <code>transform-origin: top left</code> makes them appear to move around more aimlessly.</li>
+</ol>
+<p>Here&rsquo;s how it looks, we&rsquo;re getting there:</p>
+<p><img src="https://blog.owenlacey.dev/uploads/2025/chrome-kmfkeh5e47.gif" alt="Auto-generated description: Small, abstract triangular shapes are scattered across a white background, creating a minimalist pattern."></p>
+<h2 id="random-floating">Random floating</h2>
+<p>Finally, I wanted them to float around like little lost asteriods. I decided to make them take a little journey and return to the original place whilst rotating:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scss" data-lang="scss"><span style="color:#66d9ef">@mixin</span><span style="color:#a6e22e"> floater-animation</span>($i) {
+
+  $yOffset<span style="color:#f92672">:</span> (<span style="color:#a6e22e">random</span>(<span style="color:#ae81ff">500</span>) <span style="color:#f92672">-</span> <span style="color:#ae81ff">250</span>) <span style="color:#f92672">/</span> <span style="color:#ae81ff">100</span>;
+  $xOffset<span style="color:#f92672">:</span> (<span style="color:#a6e22e">random</span>(<span style="color:#ae81ff">500</span>) <span style="color:#f92672">-</span> <span style="color:#ae81ff">250</span>) <span style="color:#f92672">/</span> <span style="color:#ae81ff">100</span>;
+  <span style="color:#66d9ef">@keyframes</span> <span style="color:#f92672">floater</span><span style="color:#e6db74">#{</span>$i<span style="color:#e6db74">}</span> {
+    <span style="color:#f92672">0</span><span style="color:#960050;background-color:#1e0010">%</span> {
+      <span style="color:#a6e22e">transform</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">translateY</span>(<span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">translateX</span>(<span style="color:#ae81ff">0</span>);
+    }
+    <span style="color:#f92672">50</span><span style="color:#960050;background-color:#1e0010">%</span> {
+      <span style="color:#a6e22e">transform</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">translateY</span>($yOffset <span style="color:#f92672">*</span> <span style="color:#ae81ff">30</span><span style="color:#66d9ef">vh</span>) <span style="color:#a6e22e">translateX</span>($xOffset <span style="color:#f92672">*</span> <span style="color:#ae81ff">30</span><span style="color:#66d9ef">vw</span>);
+    }
+    <span style="color:#f92672">100</span><span style="color:#960050;background-color:#1e0010">%</span> {
+      <span style="color:#a6e22e">transform</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">translateY</span>(<span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">translateX</span>(<span style="color:#ae81ff">0</span>);
+    }
+  }
+}
+
+<span style="color:#a6e22e">.floater</span> {
+
+  $n<span style="color:#f92672">:</span> <span style="color:#ae81ff">200</span>;
+  <span style="color:#66d9ef">@for</span> $i <span style="color:#f92672">from</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">through</span> $n {
+
+    <span style="color:#66d9ef">@include</span><span style="color:#a6e22e"> spin-animation</span>($i<span style="color:#f92672">,</span> $initialRotate); <span style="color:#75715e">// as before
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">@include</span><span style="color:#a6e22e"> floater-animation</span>($i);
+    <span style="color:#66d9ef">&amp;</span><span style="color:#f92672">--</span><span style="color:#e6db74">#{</span>$i<span style="color:#e6db74">}</span> {
+      <span style="color:#66d9ef">@include</span><span style="color:#a6e22e"> random-position</span>; <span style="color:#75715e">// as before      $floaterDuration: random(10) + 5;
+</span><span style="color:#75715e"></span>      <span style="color:#a6e22e">animation</span><span style="color:#f92672">:</span> floater<span style="color:#e6db74">#{</span>$i<span style="color:#e6db74">}</span> <span style="color:#e6db74">#{</span>$floaterDuration<span style="color:#e6db74">}</span>s ease-in-out infinite;
+
+      <span style="color:#f92672">&gt;</span> <span style="color:#f92672">img</span> {
+        <span style="color:#a6e22e">transform-origin</span><span style="color:#f92672">:</span> top left;
+        <span style="color:#a6e22e">animation</span><span style="color:#f92672">:</span> spin<span style="color:#e6db74">#{</span>$i<span style="color:#e6db74">}</span> <span style="color:#ae81ff">30</span><span style="color:#66d9ef">s</span> linear infinite;
+      }
+    }
+  }
+}
+</code></pre></div><p>Getting pretty crazy, right? All the magic numbers in the CSS are based on what felt right when playing around locally with it. Since this was a bit of fun, and I&rsquo;d sunk plenty of time into this already, I decided this was good enough to yeet into production.</p>
+<p><img src="https://blog.owenlacey.dev/uploads/2025/chrome-hommpxcu70.gif" alt="final animation"></p>
+<h2 id="but-what-does-the-javascript-look-like">But what does the javascript look like?</h2>
+<p>As you saw above, my SASS code is pretty questionable, but here&rsquo;s how much <code>Floater</code> function component shaped up:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-jsx" data-lang="jsx"><span style="color:#66d9ef">import</span> <span style="color:#e6db74">&#34;/src/styles/floater.scss&#34;</span>
+
+<span style="color:#66d9ef">function</span> <span style="color:#a6e22e">Floater</span>({<span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">index</span>}) {
+    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">imageUrl</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">`./</span><span style="color:#e6db74">${</span><span style="color:#66d9ef">import</span>.<span style="color:#a6e22e">meta</span>.<span style="color:#a6e22e">env</span>.<span style="color:#a6e22e">BASE_URL</span><span style="color:#e6db74">}</span><span style="color:#e6db74">/floaters/</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">name</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>;
+    <span style="color:#66d9ef">return</span> (
+        &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span>{<span style="color:#e6db74">`floater floater--</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">index</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>}&gt;
+            &lt;<span style="color:#f92672">img</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">imageUrl</span>} <span style="color:#a6e22e">alt</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;floater&#34;</span>/&gt;
+        &lt;/<span style="color:#f92672">div</span>&gt;
+    );
+}
+
+<span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> <span style="color:#a6e22e">Floater</span>;
+</code></pre></div><p>Told you! No hacky javascript 😎. I needed to have a <code>div</code> and <code>img</code> so that they could have the <code>floaterX</code> and <code>spinX</code>animations respectively.</p>
+<p>Here&rsquo;s how my site looks without those styles imported:
+<!-- raw HTML omitted --></p>
+<p>Pretty boring right? Lastly, and most importantly, I need to consider people accessing my site with accessibility requirements, so I wrapped the <code>animation</code> CSS properties in the following:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-css" data-lang="css">@<span style="color:#66d9ef">media</span> <span style="color:#f92672">(</span><span style="color:#f92672">prefers-reduced-motion</span><span style="color:#f92672">:</span> <span style="color:#f92672">no-preference</span><span style="color:#f92672">)</span> { }
+</code></pre></div><h1 id="finally">Finally</h1>
+<p>Thanks so much for reading this. As a treat for getting to the end, why don&rsquo;t you try triple-click on <a href="https://owenlacey.dev">my homepage</a> and see what happens&hellip;</p>
+
+		</div>
+	  </div>
+	
+	  <div class="h-entry">
+		
+			<h1><a href="https://blog.owenlacey.dev/2025/02/22/building-probably-the-best-fpl.html">I let Google OR Tools pick my FPL team</a></h1>
+		
+
+		<a href="https://blog.owenlacey.dev/2025/02/22/building-probably-the-best-fpl.html" class="u-url"><time class="dt-published" datetime="2025-02-23 17:03:57 &#43;0000">Feb 23, 2025</time></a>
+
+		<div class="e-content">
+			 <p>First of all, I&rsquo;m glad you&rsquo;re here. If we had a venn diagram of &ldquo;software developers&rdquo; and &ldquo;people interested in FPL&rdquo;, it&rsquo;d likely not be much more than us two. Rest assured, if you&rsquo;re only in the former camp I hope there will still be some things of interest. Also, disclaimer, I am by no means a FPL expert: I&rsquo;m sitting rock bottom of my league with friends so think less Liverpool, more Southampton. Perhaps if it were possible to predict what would happen in a game of football (assuming I&rsquo;m smart enough to even do so), it wouldn&rsquo;t be the most popular sport in the world.</p>
+<p>The code for this post can be found in my Github repo <a href="https://github.com/owen-lacey/fpl-team-picker">here</a>.</p>
+<h1 id="tldr">TL;DR</h1>
+<p>For those that just want FPL tips, here is (probably) the best FPL team, not that it&rsquo;ll get you very far:</p>
+<!-- raw HTML omitted -->
+<p>This team is picked based on how many points each player is predicted to score (which I&rsquo;ll go into later).</p>
+<h1 id="what-is-fpl">What is FPL?</h1>
+<p>FPL means Fantasy Premier League. It&rsquo;s a game where you pick a team of players, and your team scores points based on real-live events in premier league games. Here are the rules:</p>
+<ol>
+<li>Pick 15 players: 2 goalkeepers (GK), 5 defenders (DEF), 5 midfielders (MID), 3 forwards (FWD).</li>
+<li>You can&rsquo;t have more than 3 players from a specific team.</li>
+<li>The cost of your team can&rsquo;t exceed the budget of 100M.</li>
+</ol>
+<p>There are around 700 players for 20 different clubs, that&rsquo;s a lot of possible teams. To save this becoming a post on discrete maths, that <em>a lot</em> of possible teams. But what&rsquo;s the &ldquo;best&rdquo; team to pick? What criteria do we even use to make this decision? This is what&rsquo;s known as a &ldquo;combinatoral optimisation&rdquo; problem, and that&rsquo;s where Google OR Tools comes in.</p>
+<h1 id="what-is-google-or-tools">What is Google OR Tools?</h1>
+<p><a href="https://developers.google.com/optimization">Google OR Tools</a> is an open source library that allows you to solve problems like this. You can use it in Java, C++, Python and, for our purposes, in C#. The documentation linked here is decent, so I wont go into too much detail as to how it all works. For our use case we&rsquo;re essentially going to ask OR Tools to solve many <code>IntVar</code>s. That is, variables which must take an integer value based on the provided upper and lower bounds. We&rsquo;ll give our <code>IntVar</code>s bounds of <code>[0,1]</code> so that if a player is picked that means its corresponding <code>IntVar</code> will have a value of <code>1</code>. The complexity comes in telling the <code>CpModel</code> what decisions to make based on a player being picked.</p>
+<p>I found it useful to create a child class of OR Tools' <code>CpModel</code> so I can easily keep track of variables that I want to add constraints for:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-csharp" data-lang="csharp"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">PickFplTeamCpModel</span> : CpModel
+{
+    <span style="color:#66d9ef">public</span> List&lt;FplPlayerSelectionVar&gt; GkSelections = [];
+    <span style="color:#66d9ef">public</span> List&lt;FplPlayerSelectionVar&gt; DefSelections = [];
+    <span style="color:#66d9ef">public</span> List&lt;FplPlayerSelectionVar&gt; MidSelections = [];
+    <span style="color:#66d9ef">public</span> List&lt;FplPlayerSelectionVar&gt; FwdSelections = [];    
+    <span style="color:#66d9ef">public</span> Dictionary&lt;<span style="color:#66d9ef">string</span>, List&lt;IntVar&gt;&gt; TeamSelectionCounts = <span style="color:#66d9ef">new</span>();
+
+    <span style="color:#66d9ef">public</span> List&lt;FplPlayerSelectionVar&gt; Selections =&gt; GkSelections
+        .Concat(DefSelections)
+        .Concat(MidSelections)
+        .Concat(FwdSelections)
+        .ToList();
+}
+</code></pre></div><p><code>FplPlayerSelectionVar</code> is a <code>record</code> that contains the player&rsquo;s details, as well as their selection variable.</p>
+<p>Now, let&rsquo;s add our constraints.</p>
+<h2 id="rule-1-2-gk--5-def-5-mid-3-fwd">Rule #1: 2 GK,  5 DEF, 5 MID, 3 FWD</h2>
+<p>We need to make sure we have the right number of players in each position. We can do this by using the properties on our child class of <code>CpModel</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-cs" data-lang="cs"><span style="color:#75715e">// Sum up the selections for each position, and ensure it matches the number of players required per position.
+</span><span style="color:#75715e"></span>model.Add(<span style="color:#66d9ef">new</span> SumArray(model.GkSelections) == <span style="color:#ae81ff">2</span>);
+model.Add(<span style="color:#66d9ef">new</span> SumArray(model.DefSelections) == <span style="color:#ae81ff">5</span>);
+model.Add(<span style="color:#66d9ef">new</span> SumArray(model.MidSelections) == <span style="color:#ae81ff">5</span>);
+model.Add(<span style="color:#66d9ef">new</span> SumArray(model.FwdSelections) == <span style="color:#ae81ff">3</span>);
+</code></pre></div><p>A <code>SumArray</code> is an OR Tools object. that sums an array of <code>IntVar</code>s. Think of it as a &ldquo;computed&rdquo; field, dependent on other <code>IntVar</code>s.
+By doing <code>model.Add</code> we adding a <em>hard constraint</em> to the model. This means that if a solution were to be found that picked only <code>4</code> defenders, the solution would be <em>infeasible</em>.</p>
+<h2 id="rule-2-max-3-players-per-team">Rule #2: max 3 players per team</h2>
+<p>Our <code>TeamSelectionCounts</code> is a dictionary, keyed by team name. We can tell the model to not pick too many players from the same team as follows:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-cs" data-lang="cs"><span style="color:#66d9ef">foreach</span>(<span style="color:#66d9ef">var</span> (<span style="color:#ae81ff">_</span>, selectionsForTeam) <span style="color:#66d9ef">in</span> model.TeamSelectionCounts)
+{
+    <span style="color:#75715e">// This sums up all the 0&#39;s and 1&#39;s for a team.
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">var</span> playersSelectedForTeam = <span style="color:#66d9ef">new</span> SumArray(selectionsForTeam);
+    model.Add(playersSelectedForTeam &lt;= <span style="color:#ae81ff">3</span>);
+}
+</code></pre></div><h2 id="rule-3-squad-cost">Rule #3: squad cost</h2>
+<p>This one&rsquo;s a bit more involved as we&rsquo;re not simply summing up <code>1</code>s and <code>0</code>s, we&rsquo;re summing up player costs based on these values. If you&rsquo;ve done any work with vectors before you might have come across <a href="https://www.wolframalpha.com/input?i=dot+product">dot product</a> operations. We&rsquo;re going to use this to sum up the cost of all selected players. That is, the <em>dot product</em> of their selection vars and their costs. The <code>FplPlayerSelectionVar</code> type contains these pieces of information:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-cs" data-lang="cs"><span style="color:#66d9ef">public</span> record FplPlayerSelectionVar
+{
+    <span style="color:#66d9ef">public</span> IntVar Selected { <span style="color:#66d9ef">get</span>; init; }
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> Cost { <span style="color:#66d9ef">get</span>; init; }
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">decimal</span> PredictedPoints { <span style="color:#66d9ef">get</span>; init; } 
+}
+</code></pre></div><p>We&rsquo;ll get to <code>PredictedPoints</code> later. By keeping this information together, we can easily sum up the costs of selected players like so:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-cs" data-lang="cs"><span style="color:#66d9ef">var</span> allPlayerSelections = model.Selections.Select(p =&gt; p.Selected).ToList();
+<span style="color:#66d9ef">var</span> allPlayerCosts = model.Selections.Select(p =&gt; p.Cost).ToList();
+<span style="color:#66d9ef">var</span> squadCost = LinearExpr.ScalProd(allPlayerSelections, allPlayerCosts);
+model.Add(squadCost &lt;= <span style="color:#ae81ff">1000</span>);
+</code></pre></div><blockquote>
+<p>Note: we&rsquo;re using <code>1000</code> rather than <code>100</code> because player cost is represented in 100,000s e.g if a player cost 7.9M, their <code>int Cost</code> would be <code>79</code>.</p>
+</blockquote>
+<p><code>LinearExpr.ScalProd</code> does the <em>dot product</em> as described earlier.</p>
+<h2 id="the-objective">The objective</h2>
+<p>At this point, we have a <em>feasible</em> solution to the problem. I could go into the web app and click &ldquo;Save&rdquo; without any validation preventing me from doing so. If this were purely a constraint solving problem (e.g doing a Sudoku is a good example of this) where no two solutions are better than another we&rsquo;d be done. However, we want the <em>best</em> team: I want to wipe the floor with my friends and be the envy of FPL merchants everywhere.</p>
+<p>In order to say an FPL team is the best possible team, the model needs to be able to compare two solutions together, and say one solution is better than another. OR Tools gets all <em>feasible</em> solutions, labelling the one with the best score as the <em>optimal</em> solution. In order to change this into an optimisation problem, we need to give the model an <em>objective</em>.</p>
+<p>This is where it gets quite squishy. If we knew for certain how many points a player would score in a given game, other than that being a very boring prospect, I&rsquo;d be doing a lot better in my FPL leagues than I currently am.</p>
+<p>So what do we go with?</p>
+<p><strong>Selection-y-est</strong>: we could pick the players most selected by other players. Using this hive-mind approach would mean we&rsquo;re more likely to pick the no-brainers, but the model wouldn&rsquo;t give us any hipster choices that would make other players go &ldquo;how did I not think of that?!&rdquo;.</p>
+<p><strong>Point-y-est</strong>: we could pick the ones who&rsquo;ve scored the most points so far. This would make a lot of sense, but would not select players who&rsquo;ve recently transfered, or have been out injured for a while.</p>
+<p><strong>Form-y-est</strong>: FPL has a concept of &ldquo;form&rdquo;. However it&rsquo;s a bit black-boxed and it&rsquo;s not very clear how this is calculated, and therefore how it corresponds to the amount of points a player might score.</p>
+<p>How about some combination of the above? I landed on putting together a very ropey linear regression model built with <a href="https://dotnet.microsoft.com/en-us/apps/ai/ml-dotnet">ML.NET</a>. I won&rsquo;t go into how this model was built, but essentially it would use past performance to predict points scored by a player for the upcoming gameweek. Inexplicably, this model was obsessed with Georginio Rutter; a very average player by FPL standards. Reassuringly, it consistently predicted that Mo Salah would score highly so I decided it was &ldquo;good enough&rdquo;. If there were reliable, publicly available information about a player&rsquo;s expected points (XP), I would swap out my linear regression model without hesitation.</p>
+<p>Here&rsquo;s how I told the model to pick me a team with the highest predicted points:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-cs" data-lang="cs"><span style="color:#66d9ef">var</span> allPlayerPredictedPoints = model.Selections.Select(p =&gt; (<span style="color:#66d9ef">int</span>)Math.Round(p.PredictedPoints * <span style="color:#ae81ff">100</span>)).ToList();
+<span style="color:#66d9ef">var</span> allPlayerSelections = model.Selections.Select(p =&gt; p.Selected).ToList();
+<span style="color:#66d9ef">var</span> teamPredictedPoints = LinearExpr.ScalProd(model.Selections, allPlayerPredictedPoints);
+model.Maximize(teamPredictedPoints);
+</code></pre></div><p>The important bit here is <code>model.Maximize</code>, this means the model&rsquo;s solution will be the one with the highest calculated <code>teamPredictedPoints</code>.</p>
+<h1 id="in-practice">In practice</h1>
+<p>Lets put all this together. Here are the top players in terms of predicted points for the upcoming gameweek (this is GW26 on 22nd Feb 2025):</p>
+<!-- raw HTML omitted -->
+<p>An immediate observation is that we won&rsquo;t be able to pick all the players in this list due to fact that we can&rsquo;t have more than five midfielders.  Chris Wood is the first FWD that appears in at #12 with a XP of <code>8.0</code>, with Erling Haaland in at #17 with <code>7.2</code> (I hope not - he&rsquo;s playing Liverpool this weekend). Let&rsquo;s compare that with the team my model picked:</p>
+<!-- raw HTML omitted -->
+<p>In table form:</p>
+<!-- raw HTML omitted -->
+<p>Let&rsquo;s check our rules:</p>
+<ol>
+<li>✅ 2 GKs, 5 DEF, 5 MID, 3 FWD</li>
+<li>✅ Max 3 players per team</li>
+<li>✅ Total team cost: 90.8M</li>
+</ol>
+<p>The predicted number of points this team scores is <code>116.1</code>.</p>
+<blockquote>
+<p><em>Narrator: they did not. They scored 70 points.</em></p>
+</blockquote>
+<p>Now, I&rsquo;ve been scoring around <code>55</code> points on average per gameweek, so this would be a big change in fortunes. I&rsquo;ll need to choose four players to go on the bench here, so I reckon I would be happy with a score of <code>90</code>. As you can see, the model ended up picking the best midfielders. It may look like it picked any old goalkeeper, however the two listed here are in fact the highest ranked, followed by Martin Dúbravka at #98.</p>
+<h1 id="next-steps">Next steps</h1>
+<p>As mentioned a few times, it isn&rsquo;t just self-deprecation, this application is far from perfect. I&rsquo;d love to be able to tell you how I&rsquo;ve soared up the FPL rankings since I started doing this, but that&rsquo;s not the case. These are the changes I&rsquo;d like to make to the model in future.</p>
+<h2 id="prioritise-starting-xi">Prioritise starting XI</h2>
+<p>The FPL squad has a size of 15, but you only score points for the 11 players you pick for the starting lineup. Therefore, why should we waste budget on benchwarmers that don&rsquo;t give me any points?</p>
+<h2 id="transfers">Transfers</h2>
+<p>You get a free transfer every game week and cumulate if you don&rsquo;t use them. Any other transfers cost you 4 points. You get a wildcard twice a season which gives you unlimited transfers, but day-to-day gameweeks need to support the scenario of &ldquo;I have these players, and X free transfers. Tell me what transfers to do&rdquo;.</p>
+<h2 id="better-xp">Better XP</h2>
+<p>As mentioned above, this solution is only as good as the XP data is. I need to either work on my linear regression model, or find some XP data that&rsquo;s less fixated on Georginio Rutter.</p>
+<h2 id="think-more-long-term">Think more long-term</h2>
+<p>At the moment, we predict the points based on the next game, but sometimes we have double-gameweeks i.e a player plays twice. It also might be that a specific player has a particularly good run of easier opponents coming up, so getting them in the team now might make sense, even if they wouldn&rsquo;t do as well as someone else in the next game.</p>
+<h1 id="finally">Finally</h1>
+<p>There&rsquo;s a lot of avenues (or rabbit holes?) we could go down for this. There&rsquo;s also plenty of third-party websites out there that facilitate FPL admin tasks. All things being equal, I found this to be a really fun application of OR Tools.</p>
+<p>You can find the code for this post on my Github repo <a href="https://github.com/owen-lacey/fpl-team-picker">here</a>.</p>
+
+		</div>
+	  </div>
+	
+
+</div>
+
+
+    
+    
+
+  </body>
+
+</html>
