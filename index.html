@@ -24,6 +24,65 @@
 	
 	  <div class="h-entry">
 		
+			<h1><a href="https://blog.owenlacey.dev/2025/04/28/nextjs.html">I made my website show what I&#39;m listening to on Spotify</a></h1>
+		
+
+		<a href="https://blog.owenlacey.dev/2025/04/28/nextjs.html" class="u-url"><time class="dt-published" datetime="2025-05-08 21:19:26 &#43;0100">May 8, 2025</time></a>
+
+		<div class="e-content">
+			 <p>I&rsquo;ve recently found myself as a lead developer on a Next.js project. There&rsquo;s a .NET API that acts as the backend, which is much more within my comfort zone, but I&rsquo;m definitely finding myself on the less-prepared side of things on the frontend.</p>
+<p>Server-side rendering has always been a bit mysterious to me: I struggle to properly grasp the benefit of something until I&rsquo;ve got a use-case that&rsquo;s meaningful to me. With quite a lot of my experience being for business-facing enterprise web apps, the benefits Next.js adds are usually fairly low down on the priority list, so it was easier for me to dismiss it as just the latest fad in web development. Until recently.</p>
+<p>Recently, something clicked. Fairly often, I&rsquo;d have have an idea for a personal project and due to my experience as a full-stack dev it&rsquo;s not long before I start thinking about things like databases &amp; integrations. This is what usually stops me; when an idea becomes multiple executable applications, not to mention their own CI/CD requirements, it feels like too much hassle for me to do in my spare time. It was only when I considered a Next.js application like two separate applications, backend and frontend, rolled into one I immediately found a use case that I was excited about.</p>
+<h2 id="my-use-case">My use case</h2>
+<p>I thought it would be cool for <a href="https://owenlacey.dev">my website</a> to show what I&rsquo;m currently listening to on spotify. From <a href="https://developer.spotify.com/documentation/web-api">their API docs</a> it seemed like a relatively straightforward integration. When playing around with their sandbox I was horrified to learn that <a href="https://open.spotify.com/track/5HF2zdaYT7zpQGrkg1hP4v?si=a5ac0094429144c4">Five Little Ducks</a> had made it into my top 5 songs of all time (don&rsquo;t have kids). All I needed to do was generate a client id / secret and start messing about with it, the only problem is I don&rsquo;t want to expose any secrets in my website.</p>
+<p>In this case, it&rsquo;s quite easy to find the secrets by checking the network tab for network requests to the spotify API:
+<!-- raw HTML omitted -->
+Now, I can&rsquo;t imagine you&rsquo;re going to do much more damage to my music library than my two-year-old currently is, but it still isn&rsquo;t good practice. I decided I&rsquo;d migrate my React application to Next.js so that this integration could take place entirely on the server and I could keep my secrets just that: secret.</p>
+<h2 id="migrating-to-nextjs">Migrating to Next.js</h2>
+<p><a href="https://nextjs.org/docs/app/guides/migrating/from-vite">This guide</a> for migrating my app to Next.js took me about 30 minutes, the only obstacles I had here was fixing eslint errors introduced when following the guide. Because my CI/CD pipeline just does <code>npm run build</code>, I had my website migrated over to Next.js in no time. I&rsquo;ve been developing long enough to know how rare it is for a migration to go this smoothly.</p>
+<p>Job done, right? No. Just because I&rsquo;ve migrated my app to Next.js doesn&rsquo;t mean the necessary parts are server-side rendered. Indeed, those pesky token requests continued to happen because I bundled my whole <code>App</code> in the client using the <code>&quot;use client&quot;</code> directive.</p>
+<!-- raw HTML omitted -->
+<p>I reached a fork in the road here where I felt I needed to choose between the following:</p>
+<ol>
+<li>Move the boundary between server and client to a higher level so I can be pickier about which components are rendered where. At the point of writing, the only responsive part of my application is related to the floating objects (see <a href="https://blog.owenlacey.dev/2025/02/24/animated-images-on-my-website.html">here</a>, and the &lsquo;fun fact&rsquo; shuffle thing; the rest is just static text.</li>
+<li>Use server actions to make an authenticated request with spotify under the hood without exposing the configured secrets.</li>
+</ol>
+<p>I decided on the latter because that pretty much solves my problem entirely without rearchitecting my (albeit small) application. Despite most of my website being static text; I reckon rendering all that on the server-side sounds like a problem for future Owen.</p>
+<h2 id="adding-an-api-route">Adding an API route</h2>
+<p>Next step was to make a http request to the next.js backend for it to make an onward authenticated request with spotify. I create the following file at <code>src/app/pages/api/test.js</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-js" data-lang="js"><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">handler</span>(<span style="color:#a6e22e">req</span>, <span style="color:#a6e22e">res</span>) {
+  <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">status</span>(<span style="color:#ae81ff">200</span>).<span style="color:#a6e22e">json</span>({ <span style="color:#a6e22e">message</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Hello from the backend!&#39;</span> })
+}
+</code></pre></div><p>Not so fast, computer says no:</p>
+<blockquote>
+<p>⨯ API Routes cannot be used with &ldquo;output: export&rdquo;. See more info here: <a href="https://nextjs.org/docs/advanced-features/static-html-export">https://nextjs.org/docs/advanced-features/static-html-export</a></p>
+</blockquote>
+<p>Indeed, removing the <code>output: 'export'</code> in my <code>next.config.mjs</code> file sorted the issue. As much as I&rsquo;d love to tell you I had some well-founded reason for doing this other than just to get it to work, I&rsquo;m just trying to prove the concept at this page:
+<!-- raw HTML omitted --></p>
+<p>Now if my years of software engineering have tought me anything it&rsquo;s to be wary of making changes to files containing the word <code>config</code>, so I pushed the commit and checked I could still deploy the site. I had already checked I could deploy since the next.js migration, so this would prove that this change to the config file caused any potential issues. My hunch, sadly, paid off:
+<!-- raw HTML omitted --></p>
+<p>Serves me right for blindly changing things without understanding the implications of doing so. So what did I actually do, and how did this break the site? Let&rsquo;s compare the output directory when removing this from the config:</p>
+<!-- raw HTML omitted -->
+<p>LHS is with <code>output: 'export'</code>, RHS is without. Crucially, the left hand side has an <code>index.html</code>, which explains why previously the site would load without a <code>404</code>. Adding the following <code>netlify.toml</code> file resolved this issue for me:</p>
+<pre tabindex="0"><code>[build]
+  command = &quot;npm run build&quot;
+  publish = &quot;.next&quot;
+
+[[plugins]]
+  package = &quot;@netlify/plugin-nextjs&quot;
+</code></pre><p>Hey presto, the API route is working on production:
+<!-- raw HTML omitted --></p>
+<p>Now I can replace this hello-world endpoint with an implementation to the spotify API, and my client-side just call my new API route without exposing any secrets:</p>
+<!-- raw HTML omitted -->
+<h2 id="final-touches">Final touches</h2>
+<p>Now I&rsquo;ve got a working API route, with secrets nicely hidden. All that&rsquo;s left is to throw together some questionable CSS and get something pretty showing on my homepage. I won&rsquo;t go into the weeds of that, but you can <a href="https://owenlacey.dev">take a look for yourself</a>:
+<!-- raw HTML omitted --></p>
+
+		</div>
+	  </div>
+	
+	  <div class="h-entry">
+		
 			<h1><a href="https://blog.owenlacey.dev/2025/04/15/173338.html">I made an AI Sudoku Solver</a></h1>
 		
 
