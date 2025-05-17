@@ -24,10 +24,10 @@
 	
 	  <div class="h-entry">
 		
-			<h1><a href="https://blog.owenlacey.dev/2025/04/28/nextjs.html">I made my website show what I&#39;m listening to on Spotify</a></h1>
+			<h1><a href="https://blog.owenlacey.dev/2025/05/08/i-made-my-website-show.html">I made my website show what I&#39;m listening to on Spotify</a></h1>
 		
 
-		<a href="https://blog.owenlacey.dev/2025/04/28/nextjs.html" class="u-url"><time class="dt-published" datetime="2025-05-08 21:19:26 &#43;0100">May 8, 2025</time></a>
+		<a href="https://blog.owenlacey.dev/2025/05/08/i-made-my-website-show.html" class="u-url"><time class="dt-published" datetime="2025-05-08 00:00:00 &#43;0100">May 8, 2025</time></a>
 
 		<div class="e-content">
 			 <p>I&rsquo;ve recently found myself as a lead developer on a Next.js project. There&rsquo;s a .NET API that acts as the backend, which is much more within my comfort zone, but I&rsquo;m definitely finding myself on the less-prepared side of things on the frontend.</p>
@@ -73,7 +73,7 @@ Now, I can&rsquo;t imagine you&rsquo;re going to do much more damage to my music
 </code></pre><p>Hey presto, the API route is working on production:
 <!-- raw HTML omitted --></p>
 <p>Now I can replace this hello-world endpoint with an implementation to the spotify API, and my client-side just call my new API route without exposing any secrets:</p>
-<!-- raw HTML omitted -->
+<p><!-- raw HTML omitted -->.&gt; Edit: I noticed that the API route would never change when I skipped the song on spotify, which wasn&rsquo;t ideal. Looking into it, I found that it was because I wasn&rsquo;t using <a href="https://nextjs.org/docs/pages/building-your-application/routing/api-routes#dynamic-api-routes">Dynamic APIs</a>, and adding `cache: &lsquo;no-store&rsquo; fixed the problem!</p>
 <h2 id="final-touches">Final touches</h2>
 <p>Now I&rsquo;ve got a working API route, with secrets nicely hidden. All that&rsquo;s left is to throw together some questionable CSS and get something pretty showing on my homepage. I won&rsquo;t go into the weeds of that, but you can <a href="https://owenlacey.dev">take a look for yourself</a>:
 <!-- raw HTML omitted --></p>
